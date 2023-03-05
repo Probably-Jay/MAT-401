@@ -1,12 +1,12 @@
 import numpy as np
 
 
-class AngularMomentum:
+class AngularMomentum(object):
     def __init__(self, x: float = 0, y: float = 0, z: float = 0):
-        self.data = np.array([x, y, z])
+        self.data = np.array([float(x), float(y), float(z)])
 
     @property
-    def x(self):
+    def x(self) -> float:
         return self.data[0]
 
     @x.setter
@@ -14,7 +14,7 @@ class AngularMomentum:
         self.data[0] = val
 
     @property
-    def y(self):
+    def y(self) -> float:
         return self.data[1]
 
     @y.setter
@@ -22,7 +22,7 @@ class AngularMomentum:
         self.data[1] = val
 
     @property
-    def z(self):
+    def z(self) -> float:
         return self.data[2]
 
     @z.setter

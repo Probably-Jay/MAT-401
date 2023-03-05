@@ -4,13 +4,13 @@ from AngularMomentum import AngularMomentum
 timeStep = 0.08
 numberOfIterations = 800
 
-angularMomentum = [AngularMomentum()] * numberOfIterations
+angularMomentum = [AngularMomentum() for i in range(numberOfIterations)]
 
 # angularMomentum.x = [0] * numberOfIterations
 # angularMomentum.y = [0] * numberOfIterations
 # angularMomentum.z = [0] * numberOfIterations
 
-t = [0] * numberOfIterations
+t = [float(0)] * numberOfIterations
 
 M = 3.14
 a = 3
@@ -39,14 +39,14 @@ for n in range(numberOfIterations - 1):
     ky2 = -timeStep * g2 * (angularMomentum[n].x + 0.5 * kx1) * (angularMomentum[n].z + 0.5 * kz1)
     kz2 = -timeStep * g3 * (angularMomentum[n].x + 0.5 * kx1) * (angularMomentum[n].y + 0.5 * ky1)
 
-    angularMomentum[n + 1].x = angularMomentum[n].x + kx2
-    angularMomentum[n + 1].y = angularMomentum[n].y + ky2
-    angularMomentum[n + 1].z = angularMomentum[n].z + kz2
+    (angularMomentum[n + 1]).x = angularMomentum[n].x + kx2
+    (angularMomentum[n + 1]).y = angularMomentum[n].y + ky2
+    (angularMomentum[n + 1]).z = angularMomentum[n].z + kz2
 
     t[n + 1] = n * timeStep
 
-l = list(map(lambda am: am.x, angularMomentum))
-plt.plot(t, l)
+listX = list(map(lambda am: am.x, angularMomentum))
+plt.plot(t, listX)
 plt.plot(t, list(map(lambda am: am.y, angularMomentum)))
 plt.plot(t, list(map(lambda am: am.z, angularMomentum)))
 
