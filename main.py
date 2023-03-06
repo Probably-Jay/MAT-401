@@ -1,56 +1,126 @@
 import matplotlib.pyplot as plt
-from AngularMomentum import AngularMomentum
+import numpy as np
 
-timeStep = 0.08
-numberOfIterations = 800
-
-angularMomentum = [AngularMomentum() for i in range(numberOfIterations)]
-
-# angularMomentum.x = [0] * numberOfIterations
-# angularMomentum.y = [0] * numberOfIterations
-# angularMomentum.z = [0] * numberOfIterations
-
-t = [float(0)] * numberOfIterations
-
-M = 3.14
-a = 3
-b = 2
-c = 1
+from Vector import Vector
 
 
-angularMomentum[0] = AngularMomentum(1, 1, 1)
+def calclate():
+    time_step = 0.08
+    number_of_iterations = 800
 
-t[0] = 0
+    angular_momenta = [Vector() for i in range(number_of_iterations)]
 
-I1 = M * (b ** 2 + c ** 2) / 5
-I2 = M * (a ** 2 + c ** 2) / 5
-I3 = M * (a ** 2 + b ** 2) / 5
+    time_measurements = [float(0)] * number_of_iterations
 
-g1 = (I3 - I2) / I1
-g2 = (I1 - I3) / I2
-g3 = (I2 - I1) / I3
+    mass = 3.14
 
-for n in range(numberOfIterations - 1):
-    kx1 = - timeStep * g1 * angularMomentum[n].y * angularMomentum[n].z
-    ky1 = - timeStep * g2 * angularMomentum[n].x * angularMomentum[n].z
-    kz1 = - timeStep * g3 * angularMomentum[n].x * angularMomentum[n].y
+    dimensions = Vector(3, 2, 1)
 
-    kx2 = -timeStep * g1 * (angularMomentum[n].y + 0.5 * ky1) * (angularMomentum[n].z + 0.5 * kz1)
-    ky2 = -timeStep * g2 * (angularMomentum[n].x + 0.5 * kx1) * (angularMomentum[n].z + 0.5 * kz1)
-    kz2 = -timeStep * g3 * (angularMomentum[n].x + 0.5 * kx1) * (angularMomentum[n].y + 0.5 * ky1)
+    angular_momenta[0] = Vector(1, 1, 1)
 
-    (angularMomentum[n + 1]).x = angularMomentum[n].x + kx2
-    (angularMomentum[n + 1]).y = angularMomentum[n].y + ky2
-    (angularMomentum[n + 1]).z = angularMomentum[n].z + kz2
+    time_measurements[0] = 0
 
-    t[n + 1] = n * timeStep
+    inertial_tensor_principal_axis: Vector = Vector()
 
-listX = list(map(lambda am: am.x, angularMomentum))
-plt.plot(t, listX)
-plt.plot(t, list(map(lambda am: am.y, angularMomentum)))
-plt.plot(t, list(map(lambda am: am.z, angularMomentum)))
+    inertial_tensor_principal_axis.x = mass * (dimensions.y ** 2 + dimensions.z ** 2) / 5
+    inertial_tensor_principal_axis.y = mass * (dimensions.x ** 2 + dimensions.z ** 2) / 5
+    inertial_tensor_principal_axis.z = mass * (dimensions.x ** 2 + dimensions.y ** 2) / 5
 
-plt.show()
+    # todo rename this
+    principle_moment = Vector()
+
+    principle_moment.x = (inertial_tensor_principal_axis.z - inertial_tensor_principal_axis.y) / inertial_tensor_principal_axis.x
+    principle_moment.y = (inertial_tensor_principal_axis.x - inertial_tensor_principal_axis.z) / inertial_tensor_principal_axis.y
+    principle_moment.z = (inertial_tensor_principal_axis.y - inertial_tensor_principal_axis.x) / inertial_tensor_principal_axis.z
+
+    for n in range(number_of_iterations - 1):
+        current_angular_momentum = angular_momenta[n]
+
+        runge_kutta2 = perform_runge_kutta(current_angular_momentum, principle_moment, time_step)
+
+        next_angular_momentum = angular_momenta[n + 1]
+        next_angular_momentum.elements = current_angular_momentum.elements + runge_kutta2.elements
+
+        time_measurements[n + 1] = n * time_step
+
+    return time_measurements, angular_momenta
+
+
+def perform_runge_kutta(current_angular_momentum, principle_moment, time_step):
+    runge_kutta1 = runge_kutta_one(time_step, principle_moment, current_angular_momentum)
+    runge_kutta2 = runge_kutta_two(current_angular_momentum, principle_moment, runge_kutta1, time_step)
+
+    runge_kutta3 = runge_kutta_three(current_angular_momentum, principle_moment, runge_kutta2, time_step)
+
+    return runge_kutta3
+
+
+def runge_kutta_three(current_angular_momentum, principle_moment, runge_kutta2, time_step):
+    runge_kutta3 = Vector()
+    runge_kutta3.x = (
+            -time_step
+            * principle_moment.x
+            * (current_angular_momentum.y + 0.5 * runge_kutta2.y)
+            * (current_angular_momentum.z + 0.5 * runge_kutta2.z)
+    )
+    runge_kutta3.y = (
+            -time_step
+            * principle_moment.y
+            * (current_angular_momentum.x + 0.5 * runge_kutta2.x)
+            * (current_angular_momentum.z + 0.5 * runge_kutta2.z)
+    )
+    runge_kutta3.z = (
+            -time_step
+            * principle_moment.z
+            * (current_angular_momentum.x + 0.5 * runge_kutta2.x)
+            * (current_angular_momentum.y + 0.5 * runge_kutta2.y)
+    )
+
+    return runge_kutta3
+
+
+def runge_kutta_two(current_angular_momentum, principle_moment, runge_kutta1, time_step) -> Vector:
+    runge_kutta2 = Vector()
+    runge_kutta2.x = (
+            -time_step
+            * principle_moment.x
+            * (current_angular_momentum.y + 0.5 * runge_kutta1.y)
+            * (current_angular_momentum.z + 0.5 * runge_kutta1.z)
+    )
+
+    runge_kutta2.y = (
+            -time_step
+            * principle_moment.y
+            * (current_angular_momentum.x + 0.5 * runge_kutta1.x)
+            * (current_angular_momentum.z + 0.5 * runge_kutta1.z)
+    )
+
+    runge_kutta2.z = (
+            -time_step
+            * principle_moment.z
+            * (current_angular_momentum.x + 0.5 * runge_kutta1.x)
+            * (current_angular_momentum.y + 0.5 * runge_kutta1.y)
+    )
+
+    return runge_kutta2
+
+
+def runge_kutta_one(time_step, principle_moment, current_angular_momentum) -> Vector:
+    runge_kutta1 = Vector()
+    runge_kutta1.x = - time_step * principle_moment.x * current_angular_momentum.y * current_angular_momentum.z
+    runge_kutta1.y = - time_step * principle_moment.y * current_angular_momentum.x * current_angular_momentum.z
+    runge_kutta1.z = - time_step * principle_moment.z * current_angular_momentum.x * current_angular_momentum.y
+    return runge_kutta1
+
+
+def plot(time_measurements, angular_momenta):
+    plt.plot(time_measurements, list(map(lambda am: am.x, angular_momenta)))
+    plt.plot(time_measurements, list(map(lambda am: am.y, angular_momenta)))
+    plt.plot(time_measurements, list(map(lambda am: am.z, angular_momenta)))
+    plt.show()
+
+
+plot(*calclate())
 
 # To summarise the algorithm:
 # • Lines 2 to 11: define known constants, the stepsize, the total number of iterative
