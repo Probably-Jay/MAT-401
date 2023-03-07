@@ -5,35 +5,39 @@ from Vector import Vector
 
 def calculate():
     time_step = 0.08
-    number_of_iterations = 800
+    duration = 20
+
+    number_of_iterations = round(duration / time_step)
 
     angular_momenta = [Vector() for _ in range(number_of_iterations)]
 
     time_measurements = [float(0)] * number_of_iterations
 
-    mass = 3.14
+    mass = 10
 
-    dimensions = Vector(3, 2, 1)
+    radius = 1
+    height = 4
 
-    angular_momenta[0] = Vector(1, 1, 1)
+    angular_momenta[0] = Vector(3, 1, 2)
 
     time_measurements[0] = 0
 
     inertial_tensor_principal_axis: Vector = Vector()
 
-    inertial_tensor_principal_axis.x = mass * (dimensions.y ** 2 + dimensions.z ** 2) / 5
-    inertial_tensor_principal_axis.y = mass * (dimensions.x ** 2 + dimensions.z ** 2) / 5
-    inertial_tensor_principal_axis.z = mass * (dimensions.x ** 2 + dimensions.y ** 2) / 5
+    inertial_tensor_principal_axis.x = mass * 3 * (radius ** 2 + 0.25 * (height ** 2)) / 20.0
+    inertial_tensor_principal_axis.y = mass * 3 * (radius ** 2 + 0.25 * (height ** 2)) / 20.0
+    inertial_tensor_principal_axis.z = mass * 3 * (2 * (radius ** 2)) / 20.0
+
+   # inertial_tensor_principal_axis.x = mass * (dimensions.y ** 2 + dimensions.z ** 2) / 5
+   #  inertial_tensor_principal_axis.y = mass * (dimensions.x ** 2 + dimensions.z ** 2) / 5
+   #  inertial_tensor_principal_axis.z = mass * (dimensions.x ** 2 + dimensions.y ** 2) / 5
 
     # todo rename this
     principle_moment = Vector()
 
-    principle_moment.x = (
-                                 inertial_tensor_principal_axis.z - inertial_tensor_principal_axis.y) / inertial_tensor_principal_axis.x
-    principle_moment.y = (
-                                 inertial_tensor_principal_axis.x - inertial_tensor_principal_axis.z) / inertial_tensor_principal_axis.y
-    principle_moment.z = (
-                                 inertial_tensor_principal_axis.y - inertial_tensor_principal_axis.x) / inertial_tensor_principal_axis.z
+    principle_moment.x = (inertial_tensor_principal_axis.z - inertial_tensor_principal_axis.y) / inertial_tensor_principal_axis.x
+    principle_moment.y = (inertial_tensor_principal_axis.x - inertial_tensor_principal_axis.z) / inertial_tensor_principal_axis.y
+    principle_moment.z = (inertial_tensor_principal_axis.y - inertial_tensor_principal_axis.x) / inertial_tensor_principal_axis.z
 
     for n in range(number_of_iterations - 1):
         current_angular_momentum = angular_momenta[n]
@@ -149,9 +153,12 @@ def runge_kutta_four(current_angular_momentum, principle_moment, runge_kutta3, t
 
 
 def plot(time_measurements, angular_momenta):
-    plt.plot(time_measurements, list(map(lambda am: am.x, angular_momenta)))
-    plt.plot(time_measurements, list(map(lambda am: am.y, angular_momenta)))
-    plt.plot(time_measurements, list(map(lambda am: am.z, angular_momenta)))
+    x_line = plt.plot(time_measurements, list(map(lambda am: am.x, angular_momenta)), label="x direction")
+    plt.plot(time_measurements, list(map(lambda am: am.y, angular_momenta)), label="y direction")
+    plt.plot(time_measurements, list(map(lambda am: am.z, angular_momenta)), label="z direction")
+    plt.xlabel("Time (s)")
+    plt.ylabel("Angular Momenta (rad s^-1)")
+    plt.legend()
     plt.show()
 
 
