@@ -19,23 +19,23 @@ def calculate():
     radius = 1
     height = 4
 
-    # inertial tensor
+    # inertial tensor principle axis
     inertial_tensor_principal_axis = Vector()
 
     inertial_tensor_principal_axis.x = mass * 3 * (radius ** 2 + 0.25 * (height ** 2)) / 20.0
     inertial_tensor_principal_axis.y = mass * 3 * (radius ** 2 + 0.25 * (height ** 2)) / 20.0
     inertial_tensor_principal_axis.z = mass * 3 * (2 * (radius ** 2)) / 20.0
 
-    # principle axis moments
-    principle_moments = Vector()
+    # euler equation for free rotation
+    euler_gamma = Vector()
 
-    principle_moments.x = ((inertial_tensor_principal_axis.z - inertial_tensor_principal_axis.y)
+    euler_gamma.x = ((inertial_tensor_principal_axis.z - inertial_tensor_principal_axis.y)
                            / inertial_tensor_principal_axis.x)
 
-    principle_moments.y = ((inertial_tensor_principal_axis.x - inertial_tensor_principal_axis.z)
+    euler_gamma.y = ((inertial_tensor_principal_axis.x - inertial_tensor_principal_axis.z)
                            / inertial_tensor_principal_axis.y)
 
-    principle_moments.z = ((inertial_tensor_principal_axis.y - inertial_tensor_principal_axis.x)
+    euler_gamma.z = ((inertial_tensor_principal_axis.y - inertial_tensor_principal_axis.x)
                            / inertial_tensor_principal_axis.z)
 
     # simulation initial conditions
@@ -46,7 +46,7 @@ def calculate():
     for n in range(number_of_iterations - 1):
         current_angular_momentum = angular_momenta[n]
 
-        runge_kutta_total = perform_runge_kutta(current_angular_momentum, principle_moments, time_step)
+        runge_kutta_total = perform_runge_kutta(current_angular_momentum, euler_gamma, time_step)
 
         next_angular_momentum = angular_momenta[n + 1]
         next_angular_momentum.elements = current_angular_momentum.elements + runge_kutta_total.elements
@@ -57,16 +57,16 @@ def calculate():
     return time_measurements, angular_momenta
 
 
-def perform_runge_kutta(current_angular_momentum, principle_moments, time_step):
+def perform_runge_kutta(current_angular_momentum, euler_gamma, time_step):
     """
     Performs 4th order runge-kutta on an object given a current angular momentum,
     principle moments of inertia, and a timestep
     :return: The result of the runge-kutta calculation
     """
-    runge_kutta1 = runge_kutta_one(time_step, principle_moments, current_angular_momentum)
-    runge_kutta2 = runge_kutta_two_and_three(current_angular_momentum, principle_moments, runge_kutta1, time_step)
-    runge_kutta3 = runge_kutta_two_and_three(current_angular_momentum, principle_moments, runge_kutta2, time_step)
-    runge_kutta4 = runge_kutta_four(current_angular_momentum, principle_moments, runge_kutta3, time_step)
+    runge_kutta1 = runge_kutta_one(time_step, euler_gamma, current_angular_momentum)
+    runge_kutta2 = runge_kutta_two_and_three(current_angular_momentum, euler_gamma, runge_kutta1, time_step)
+    runge_kutta3 = runge_kutta_two_and_three(current_angular_momentum, euler_gamma, runge_kutta2, time_step)
+    runge_kutta4 = runge_kutta_four(current_angular_momentum, euler_gamma, runge_kutta3, time_step)
 
     runge_kutta_total = Vector()
     runge_kutta_total.elements = ((runge_kutta1.elements
@@ -78,33 +78,33 @@ def perform_runge_kutta(current_angular_momentum, principle_moments, time_step):
     return runge_kutta_total
 
 
-def runge_kutta_one(time_step, principle_moments, current_angular_momentum) -> Vector:
+def runge_kutta_one(time_step, euler_gamma, current_angular_momentum) -> Vector:
     runge_kutta1 = Vector()
-    runge_kutta1.x = - time_step * principle_moments.x * current_angular_momentum.y * current_angular_momentum.z
-    runge_kutta1.y = - time_step * principle_moments.y * current_angular_momentum.x * current_angular_momentum.z
-    runge_kutta1.z = - time_step * principle_moments.z * current_angular_momentum.x * current_angular_momentum.y
+    runge_kutta1.x = - time_step * euler_gamma.x * current_angular_momentum.y * current_angular_momentum.z
+    runge_kutta1.y = - time_step * euler_gamma.y * current_angular_momentum.x * current_angular_momentum.z
+    runge_kutta1.z = - time_step * euler_gamma.z * current_angular_momentum.x * current_angular_momentum.y
     return runge_kutta1
 
 
-def runge_kutta_two_and_three(current_angular_momentum, principle_moments, runge_kutta1, time_step) -> Vector:
+def runge_kutta_two_and_three(current_angular_momentum, euler_gamma, runge_kutta1, time_step) -> Vector:
     runge_kutta2 = Vector()
     runge_kutta2.x = (
             -time_step
-            * principle_moments.x
+            * euler_gamma.x
             * (current_angular_momentum.y + 0.5 * runge_kutta1.y)
             * (current_angular_momentum.z + 0.5 * runge_kutta1.z)
     )
 
     runge_kutta2.y = (
             -time_step
-            * principle_moments.y
+            * euler_gamma.y
             * (current_angular_momentum.x + 0.5 * runge_kutta1.x)
             * (current_angular_momentum.z + 0.5 * runge_kutta1.z)
     )
 
     runge_kutta2.z = (
             -time_step
-            * principle_moments.z
+            * euler_gamma.z
             * (current_angular_momentum.x + 0.5 * runge_kutta1.x)
             * (current_angular_momentum.y + 0.5 * runge_kutta1.y)
     )
@@ -112,24 +112,24 @@ def runge_kutta_two_and_three(current_angular_momentum, principle_moments, runge
     return runge_kutta2
 
 
-def runge_kutta_four(current_angular_momentum, principle_moments, runge_kutta3, time_step):
+def runge_kutta_four(current_angular_momentum, euler_gamma, runge_kutta3, time_step):
     runge_kutta4 = Vector()
 
     runge_kutta4.x = (
             -time_step
-            * principle_moments.x
+            * euler_gamma.x
             * (current_angular_momentum.y + runge_kutta3.y)
             * (current_angular_momentum.z + runge_kutta3.z)
     )
     runge_kutta4.y = (
             -time_step
-            * principle_moments.y
+            * euler_gamma.y
             * (current_angular_momentum.x + runge_kutta3.x)
             * (current_angular_momentum.z + runge_kutta3.z)
     )
     runge_kutta4.z = (
             -time_step
-            * principle_moments.z
+            * euler_gamma.z
             * (current_angular_momentum.x + runge_kutta3.x)
             * (current_angular_momentum.y + runge_kutta3.y)
     )
