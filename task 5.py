@@ -4,7 +4,7 @@ from sklearn.preprocessing import normalize
 from Vector import Vector
 
 
-def calculate() -> list[Vector]:
+def calculate():
     # simulation variables
     time_step = 0.01
     duration = 20
@@ -12,10 +12,10 @@ def calculate() -> list[Vector]:
     number_of_iterations = round(duration / time_step)
 
     # initialise data arrays
-    angular_momentum = [Vector() for _ in range(number_of_iterations)]
-    velocity = [Vector() for _ in range(number_of_iterations)]
-    position = [Vector() for _ in range(number_of_iterations)]
-    point_p_position = [Vector() for _ in range(number_of_iterations)]
+    angular_momenta = [Vector() for _ in range(number_of_iterations)]
+    velocities = [Vector() for _ in range(number_of_iterations)]
+    positions = [Vector() for _ in range(number_of_iterations)]
+    point_p_positions = [Vector() for _ in range(number_of_iterations)]
     time_measurements = [float(0) for _ in range(number_of_iterations)]
 
     # object variables
@@ -45,29 +45,29 @@ def calculate() -> list[Vector]:
                      / inertial_tensor_principal_axis.z)
 
     # simulation initial conditions
-    angular_momentum[0] = Vector(3, 1, 2)
+    angular_momenta[0] = Vector(3, 1, 2)
     acceleration = Vector(0, 0, -9.8)
-    velocity[0] = Vector(0, 0, 200)
-    point_p_position[0].elements = position[0].elements + point_p_local.elements
+    velocities[0] = Vector(0, 0, 200)
+    point_p_positions[0].elements = positions[0].elements + point_p_local.elements
     time_measurements[0] = 0
 
     # run simulation
     for n in range(number_of_iterations - 1):
         next_time = n * time_step
 
-        next_angular_momentum = calculate_next_angular_momentum(angular_momentum, euler_gamma, n, time_step)
+        next_angular_momentum = calculate_next_angular_momentum(angular_momenta, euler_gamma, n, time_step)
 
-        next_position = calculate_next_position(acceleration, n, position, time_step, velocity)
+        next_position = calculate_next_position(acceleration, n, positions, time_step, velocities)
 
         local_p_this_step = calculate_next_local_p_position(next_angular_momentum, next_time, point_p_local)
 
-        next_p_position = point_p_position[n + 1]
+        next_p_position = point_p_positions[n + 1]
         next_p_position.elements = next_position.elements + local_p_this_step.elements
 
         time_measurements[n + 1] = next_time
 
     # return results
-    return point_p_position
+    return time_measurements, angular_momenta,  positions, velocities, point_p_positions
 
 
 def calculate_next_angular_momentum(angular_momentum, euler_gamma, n, time_step) -> Vector:
@@ -239,18 +239,40 @@ def calculate_rotation_matrix(alpha, beta, gamma, theta) -> np.array:
     return rotation_matrix
 
 
-def plot(point_p_positions):
+def plot(time_measurements, angular_momenta,  positions, velocities, point_p_positions):
     """
     Plot the results of the simulation using matplotlib
     """
+    # plot angular momenta
+    plt.plot(time_measurements, list(map(lambda am: am.x, angular_momenta)), label="x axis")
+    plt.plot(time_measurements, list(map(lambda am: am.y, angular_momenta)), label="y axis")
+    plt.plot(time_measurements, list(map(lambda am: am.z, angular_momenta)), label="z axis")
+    plt.xlabel("Time (s)")
+    plt.ylabel("Angular Momenta (rad s^-1)")
+    plt.legend()
+    plt.title("Angular momenta as function of time")
+    plt.show()
+
+    # plot positions and velocities of centre of mass
+    plt.plot(time_measurements, list(map(lambda am: am.z, positions)), label="position")
+    plt.plot(time_measurements, list(map(lambda am: am.z, velocities)), label="velocity")
+
+    plt.xlabel("Time (s)")
+    plt.ylabel("Vertical position (m), Vertical velocity (m s^-1)")
+    plt.legend()
+    plt.title("Vertical velocity and displacement of centre of mass as function of time")
+    plt.show()
+
+    # plot projection of point p
     plt.plot(list(map(lambda am: am.x, point_p_positions)), list(map(lambda am: am.y, point_p_positions)),
              label="x-y projection")
 
     plt.xlabel("x position (m)")
     plt.ylabel("y position (m)")
     plt.legend()
+    plt.title("Projection of position in x-y of point P")
     plt.show()
 
 
 # run the program
-plot(calculate())
+plot(*calculate())
