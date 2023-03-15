@@ -199,6 +199,7 @@ def calculate_next_local_p_position(next_angular_momentum, next_time, point_p_lo
     normalised_angular_momentum = Vector()
     normalised_angular_momentum.elements = next_angular_momentum.elements / angular_momentum_magnitude
 
+    # angular momenta axis, variables used to calculate rotation matrix
     alpha = normalised_angular_momentum.x
     beta = normalised_angular_momentum.y
     gamma = normalised_angular_momentum.z
