@@ -57,12 +57,12 @@ def calculate():
 
         next_angular_momentum = calculate_next_angular_momentum(angular_momenta, euler_gamma, n, time_step)
 
-        next_position = calculate_next_position(acceleration, n, positions, time_step, velocities)
+        next_centre_of_mass_position = calculate_next_position(acceleration, n, positions, time_step, velocities)
 
-        local_p_this_step = calculate_next_local_p_position(next_angular_momentum, next_time, point_p_local)
+        local_p_position_this_step = calculate_next_local_p_position(next_angular_momentum, next_time, point_p_local)
 
         next_p_position = point_p_positions[n + 1]
-        next_p_position.elements = next_position.elements + local_p_this_step.elements
+        next_p_position.elements = next_centre_of_mass_position.elements + local_p_position_this_step.elements
 
         time_measurements[n + 1] = next_time
 
@@ -192,7 +192,7 @@ def calculate_next_local_p_position(next_angular_momentum, next_time, point_p_lo
     Calculate the local position of point_p_local using the angular momentum and time
     """
     # calculate theta from the angular momentum magnitude
-    angular_momentum_magnitude = np.linalg.norm(next_angular_momentum.elements, ord=1)
+    angular_momentum_magnitude = np.linalg.norm(next_angular_momentum.elements)
     theta = angular_momentum_magnitude * next_time
 
     # calculate variables needed for rotation matrix
